@@ -1,0 +1,126 @@
+# Elixir in action
+
+## Chapter 1
+
+Para entender a motivação de utilizar uma linguagem relativamente obscura como Elixir
+![](images/ex.PNG)
+![](images/js.PNG)
+![](images/py.PNG)
+
+É preciso entender um pouco as dificuldades de um software, linguagens como Python e Javascript
+prometem uma solução unificada para diferentes problemas, Elixir por outro lado foca em resolver
+apenas um problema, porém com excelência.
+
+A linguagem cria um ambiente de desenvolvimento e possui diversos adoçantes de sintaxe, porém
+o verdadeiro herói da história é a linguagem Erlang, no qual Elixir herda e tem contato direto.
+
+## Erlang
+
+Erlang é uma plataforma de desenvolvimento de sistemas escalonáveis e de constante disponibilidade.
+
+É interessante a preocupação com escalonar quando você considera um website, o serviço está sendo
+atendido por um computador com determinado poder computacional, uma vez que esse recurso atinge
+o limite da capacidade não é trivial encontrar formas de colocar mais poder computacional.
+
+Duas abordagens que existem são o escalonamento vertical e escalonamento horizontal, o vertical
+é dado quando você só aumenta o poder computacional de uma única máquina (melhora a CPU, coloca
+mais cores), escalonamento horizontal é quando você aumenta o número de máquinas que atendem
+o mesmo serviço, porém perceba que existe um sério problema com múltiplas máquinas respondendo
+por um único serviço, o problema em questão é Estado (State), como garantir que o sistema 
+responda da forma correta quando diferentes máquinas podem querer compartilhar informações e 
+suas possíveis modificações ao longo da existência do site?
+
+A linguagem Erlang já vem com algumas respostas para esses problemas, até agora não há uma resposta
+superior, geralmente existe alguns sacrifícios que tem de se ceder, isso cabe ao engenheiro escolher.
+
+Um software feito em Erlang já vem equipado de diversas ferramentas para garantir o conceito de
+alta disponibilidade, esse conceito é um pouco abrangente, engloba a questão de distribuição 
+de sistema (questão de horizontalidade, ter redundância no sistema), questão de escalonar de forma
+flexível, ferramentas de permissividade a erros (quando ocorre um erro, ele para o sistema 
+como um todo ou tem problemas isolados?), questão de responsividade (como é distribuido os
+recursos de processamento de uma tarefa?) e, por último, updates no código requerem que o sistema
+seja desativado temporariamente?
+
+Para lidar com isso foi criado um modelo concomitante (concurrent) de tratamento, em que a linguagem
+em si define e separa os processamentos computacionais, a linguagem possui um ambiente virtual
+chamado BEAM, um orquestrador que transforma código Erlang em binários para que o computador 
+execute, um processo pode ser interpretado como esse fragmento de código que soma dois números:
+
+```elixir
+2 + 2
+1 + 4
+```
+
+Veja que essa tarefa exigiu um recurso computacional para ser feito, a ideia de uma linguagem 
+funcional igual Erlang é, criar várias pequenas funções (functions mesmo). O BEAM orquestra da
+seguinte forma:
+![](images/os.png)
+Esse modelo muito se assemelha ao que os próprios computadores usam, porém o autor ressalva que
+os processos do BEAM são extremamente leves (30kb de memória inicial, sendo que num programa
+padrão, é esperado que mais de 100mil processos existam concomitamente dentro de um espaço BEAM).
+Os Schedulers trazem um grande benefício, eles organizam o tempo que cada processo tem de uso de
+CPU, o modelo que é utilizado aqui é criar uma fila de processos e dar um certo tempo para um 
+processo, se após determinados *ms* esse processo ainda não finalizou, ele é interrompido e
+colocado no final da fila. Isso garante que uma única tarefa não bloqueie o uso para o restante
+dos usuários.
+
+O modelo de separamento em processos traz vantagem de isolamento, caso ocorra um bug com um processo
+ele é finalizado e isso não afeta outros processos, pois eles não compartilham Estados entre eles.
+Essa separação como processo também facilita na questão de escalamento horizontal, pois, há
+um protocolo de troca de mensagens entre processos e isso se extende para troca de mensagens
+entre computadores diferentes.
+
+Com isso já é possível ver que de fábrica, Erlang não é bom para computação científica (overhead
+desnecessário de interromper o cálculo, sendo que o objetivo pra computação científica numérica
+é paralelizar para computar o mais rápido possível). Porém ao mesmo tempo é possível ver 
+as vantagens que esse modelo traz, quando o assunto é fazer um website:
+
+![](images/comparison.png)
+
+## Elixir
+
+Elixir é uma alternativa ao Erlang, ela usa a máquina virtual do Erlang (BEAM) e pode acessar
+todos os módulos que existem na linguagem Erlang, a vantagem é a simplificação do código, 
+alguns ambientes extrar de desenvolvimento, focado na experiência do programador, o código em 
+elixir é dividido em processos e esses existem dentro de módulos, esses módulos são meramente
+um espaço nominal que contém diferentes funções, aqui denominadas de Process.
+
+Considere o seguinte Módulo que contém duas funções, uma de soma de números e outra de subtração
+de dois números.
+
+```elixir
+defmodule Simple do
+  def soma(a, b) do
+    a + b
+  end
+
+  def subt(a, b) do
+    a - b
+  end
+
+  def teste() do
+  end
+end
+```
+
+```elixir
+Simple.soma(1, 2)
+```
+
+```elixir
+Simple.subt(1, 2)
+```
+
+Repare que é uma linguagem de tipagem implícita, ou seja, semelhar ao Javascript, não há declaração
+de tipos diferentes e também não há **return**, isso porquê é obrigatório que a última linha
+seja um retorno, seja ele num divisor lógico ou por ter chegado ao fim da função. Caso não haja nada
+o retorno que recebe é o átomo chamado **nil**.
+
+```elixir
+Simple.teste()
+```
+
+## Objetivos ao longo do livro
+
+O objetivo ao fim do livro será de criar um servidor de tarefas To-Do que seja distribuído e
+que possua facilidades para ser futuramente escalonado.
