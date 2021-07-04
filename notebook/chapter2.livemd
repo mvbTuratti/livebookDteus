@@ -1,0 +1,338 @@
+# Chapter 2 til 2.4
+
+## Building blocks
+
+The simplest way to acess Elixir functionality is through **iex**.
+
+Iex is a interactive shell, you can access it by typing iex in your terminal once you have Elixir installed in your machine
+![](images/imgCmd.PNG)
+
+Running **iex** starts an instance of the BEAM and then runs an interactive shell.
+After you type an expression, it is interpreted and executed, it returns a value that is printed
+on the screen.
+
+## Variables
+
+Elixir is a dynamic programming language, which means you don't declare your variables or it's type.
+Instead the shape of the variable it's defined by whatever data it contains in the moment.
+This process it's called *binding*. When you start a variable it's bound to the value you provided.
+
+```elixir
+salario = 1000
+```
+
+```elixir
+salario
+```
+
+Variables always starts with *lowercase* alphabetic character or an underscore _
+
+*variable_name*
+
+*also_valid1*
+
+validButNotRecommended
+
+NotValid
+
+Variables names can also end with ! or ?
+
+*variable?*
+
+*variable!*
+
+Variables can be rebound to another value
+
+```elixir
+salarie = 1000
+IO.puts(salarie)
+salarie = 1100
+IO.puts(salarie)
+```
+
+Rebinding doesn't mutate the original memory space, it reserves a new memory space and directs to it.
+![](images/imgVar.png)
+
+Elixir is garbage collected, which means you don't have to manually release memory. When a variable goes 
+out of scope, it is eligible for future garbage collection.
+
+## Modules
+
+As a functional language, Elixir is composed of functions that are grouped by a module.
+
+```elixir
+defmodule Geometry do
+  def rectangle_area(x, y) do
+    x * y
+  end
+end
+```
+
+To use this module you can type it directly in the **iex** or load this module from a file when you start 
+the iex window.
+
+**iex geometry.ex**
+
+```elixir
+Geometry.rectangle_area(5, 4)
+```
+
+Elixir use *.ex* as a file extension, you can define more than one Module inside a single *.ex* file
+
+The name convention for Module naming is CamelCase, with a . (dot) to define hierarchy.
+
+You can nest modules, however after compilation there are no special relationship between modules.
+
+```elixir
+defmodule Geometry do
+  defmodule Square do
+    def area(x, y) do
+      x * y
+    end
+  end
+
+  def type() do
+    "Geometry"
+  end
+end
+```
+
+```elixir
+Geometry.type()
+```
+
+```elixir
+Geometry.Square.area(5, 5)
+```
+
+```elixir
+Square.area(5, 5)
+```
+
+You can also do a short function definition, this will be useful in the future for *pattern matching*.
+
+```elixir
+defmodule Shapes do
+  def square(x), do: x * x
+end
+```
+
+```elixir
+Shapes.square(10)
+```
+
+Parentheses are optional in Elixir, you can omit them for function with no parameters and when you call a function.
+
+```elixir
+defmodule Example do
+  def hello do
+    "Hello world"
+  end
+
+  def greeting(name) do
+    "Hello " <> name
+  end
+end
+```
+
+```elixir
+Example.hello()
+```
+
+```elixir
+Example.greeting("Turatti")
+```
+
+If a function resides in the same module, you can omit the Module name.
+
+```elixir
+defmodule Geometry do
+  def rectangle_area(x, y), do: x * y
+
+  def square_area(x) do
+    rectangle_area(x, x)
+  end
+end
+```
+
+```elixir
+Geometry.square_area(10)
+```
+
+## Pipeline Operator |>
+
+The structure of a functional language is to define multiples short functions and compose a pipeline
+which data flows in a sequentional manner, the *pipe* operator exists to facilitate this style of 
+coding.
+
+```elixir
+-5
+|> abs()
+|> IO.inspect()
+|> Kernel.+(3)
+|> IO.inspect()
+|> Geometry.square_area()
+```
+
+The previous code it's equivalent to this next fragment, pipeline allow us to more elegantly 
+compose functions, where an element of the pipe is passed as a first argument to the next function 
+of the pipe.
+
+```elixir
+Geometry.square_area(IO.inspect(Kernel.+(IO.inspect(abs(-5)), 3)))
+```
+
+## Function arity
+
+*Arity* is the name given to the number of parameters a function receives. The uniqueness of a 
+function is defined by it's module, name and arity.
+
+```elixir
+defmodule Area do
+  def area(x), do: area(x, x)
+
+  def area(x, y), do: x * y
+end
+```
+
+```elixir
+Area.area(10) |> IO.inspect()
+Area.area(5, 10) |> IO.inspect()
+```
+
+This behaviour is done implicity when you define a default value.
+
+```elixir
+defmodule Sum do
+  def sum(x, y \\ 0), do: x + y
+end
+```
+
+```elixir
+Sum.sum(5, 10) |> IO.inspect()
+Sum.sum(5 |> IO.inspect())
+```
+
+The notation used for arity is as follows, *Area.area/1* and *Area.area/2* for the previous examples.
+Because arity distinguishes functions, it is not possible to have a variable number of parameters (Such as Javascript or C languages).
+
+## Visibility
+
+You can define a function as private, it won't be exported and can only be used inside it's module.
+
+```elixir
+defmodule Visibility do
+  def use, do: check()
+
+  defp check() do
+    "Checked"
+  end
+end
+```
+
+```elixir
+Visibility.use()
+```
+
+```elixir
+Visibility.check()
+```
+
+## Imports and aliases
+
+Calling a function requires using its module name, you can use import to drop this requirement
+
+```elixir
+defmodule Test do
+  import IO
+
+  def check() do
+    puts("Without IO!")
+  end
+end
+```
+
+```elixir
+Test.check()
+```
+
+Be mindful that imports are usually discouraged in favor of *alias* which creates an alias to the module in question.
+
+```elixir
+defmodule MyMod do
+  alias Kernel, as: K
+
+  def test do
+    -5
+    |> abs
+    |> IO.inspect()
+    |> K.+(3)
+    |> IO.inspect()
+    |> Area.area()
+  end
+end
+```
+
+```elixir
+MyMod.test()
+```
+
+It is also useful for when you are deeply nested in a module, then you can easily abreviate its name.
+
+*Geometry.Squares* to *as: Square*
+
+## Module attributes
+
+They are used as a constant in the scope of the Module, for instance:
+
+```elixir
+defmodule Circle do
+  @pi 3.14159
+  def area(r), do: r * r * @pi
+  def circumference(r), do: 2 * r * @pi
+end
+```
+
+```elixir
+Circle.area(3) |> IO.inspect()
+Circle.circumference(3) |> IO.inspect()
+```
+
+They are also useful for generating documentation for your code.
+
+[https://hexdocs.pm/elixir/writing-documentation.html](https://hexdocs.pm/elixir/writing-documentation.html)
+
+With some projects to generate automatic HTML to translate these attributes into documentation.
+[https://github.com/elixir-lang/ex_doc](https://github.com/elixir-lang/ex_doc)
+
+## Typespec
+
+Type specification is a feature that uses attributes to indicate types that your functions want and which kind of returns it provides.
+It is not mandatory, but it is pretty helpful.
+
+```elixir
+defmodule Circle do
+  @pi 3.14159
+
+  @spec area(number) :: number
+  def area(r), do: r * r * @pi
+
+  @spec circumference(number) :: number
+  def circumference(r), do: 2 * r * @pi
+end
+```
+
+You can use a erlang tool called *dialyzer*, however just as a notation standpoint I consider helpful.
+
+[http://erlang.org/doc/man/dialyzer.html](http://erlang.org/doc/man/dialyzer.html)
+
+Normal comments are done with #
+
+```elixir
+defmodule Test do
+  # comentario
+  def teste() do
+    "Hello"
+  end
+end
+```
